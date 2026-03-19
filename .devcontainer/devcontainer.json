@@ -6,6 +6,13 @@
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	"features": {
+		// useful R packages
+			  "ghcr.io/rocker-org/devcontainer-features/r-packages:1": {
+		//devtools, usethis, and pak contain utilities for r package development.
+           "packages": "tidyverse,pdp,cli,rlang,devtools,usethis,pak,rio,ggplot2",
+            "installSystemRequirements": true
+        },
+
 		// more info: https://github.com/rocker-org/devcontainer-features/blob/main/src/r-packages/README.md
 	  "ghcr.io/rocker-org/devcontainer-features/r-packages:1": {
            "packages": "cli,rlang",
