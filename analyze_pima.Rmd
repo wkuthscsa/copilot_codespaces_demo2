@@ -1,0 +1,136 @@
+---
+title: "Pima Dataset Visual Analysis and Correlations"
+author: "Coding Agent"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE);
+```
+
+```{r libraries}
+# Load all required libraries at the top
+library(pdp);
+library(randomForest);
+library(ggplot2);
+library(dplyr);
+library(corrplot);
+```
+
+```{r load_data}
+# Load the Pima dataset from pdp package
+data(pima, package = "pdp");
+
+# Remove rows with missing values for analysis
+pima <- na.omit(pima);
+```
+
+```{r explore_data}
+# Initial data exploration
+summary(pima);
+str(pima);
+```
+
+```{r split_data}
+# Split data into training and testing sets as per standard practice
+set.seed(123);
+train_proportion <- 0.7;
+train_indices <- sample(1:nrow(pima), size = floor(train_proportion * nrow(pima)));
+train_data <- pima[train_indices, ];
+test_data <- pima[-train_indices, ];
+```
+
+```{r correlations}
+# Calculate correlations for numeric variables
+numeric_columns <- sapply(pima, is.numeric);
+correlation_matrix <- cor(pima[, numeric_columns], use = "pairwise.complete.obs");
+
+# Visualize correlation matrix
+corrplot(correlation_matrix, method = "circle");
+```
+
+```{r correlation_analysis}
+# Find highly correlated variable pairs (correlation > 0.5)
+high_correlations <- which(abs(correlation_matrix) > 0.5 & correlation_matrix != 1, arr.ind = TRUE);
+high_correlations <- high_correlations[high_correlations[, 1] < high_correlations[, 2], ];  # Remove duplicates
+
+# Display highly correlated pairs
+if (nrow(high_correlations) > 0) {
+  correlated_pairs <- data.frame(
+    Var1 = rownames(correlation_matrix)[high_correlations[, 1]],
+    Var2 = colnames(correlation_matrix)[high_correlations[, 2]],
+    Correlation = correlation_matrix[high_correlations]
+  );
+  print(correlated_pairs);
+} else {
+  print("No highly correlated pairs found.");
+}
+```
+
+```{r histograms}
+# Create histograms for all numeric variables
+numeric_vars <- names(pima)[numeric_columns];
+for (variable_name in numeric_vars) {
+  plot <- ggplot(pima, aes_string(x = variable_name)) +
+    geom_histogram(bins = 30, fill = "blue", alpha = 0.7) +
+    labs(title = paste("Histogram of", variable_name), x = variable_name, y = "Frequency") +
+    theme_minimal();
+  print(plot);
+}
+```
+
+```{r boxplots}
+# Create boxplots for numeric variables by response variable (assuming diabetes is the response)
+response_var <- "diabetes";  # The response variable
+for (variable_name in numeric_vars) {
+  if (variable_name != response_var) {
+    plot <- ggplot(pima, aes_string(x = response_var, y = variable_name)) +
+      geom_boxplot(fill = "lightblue") +
+      labs(title = paste("Boxplot of", variable_name, "by", response_var), x = response_var, y = variable_name) +
+      theme_minimal();
+    print(plot);
+  }
+}
+```
+
+```{r scatter_plots}
+# Create scatter plots for highly correlated pairs
+if (exists("correlated_pairs") && nrow(correlated_pairs) > 0) {
+  for (ii in 1:nrow(correlated_pairs)) {
+    var1 <- correlated_pairs$Var1[ii];
+    var2 <- correlated_pairs$Var2[ii];
+    plot <- ggplot(pima, aes_string(x = var1, y = var2)) +
+      geom_point(alpha = 0.6) +
+      geom_smooth(method = "lm", se = FALSE, color = "red") +
+      labs(title = paste("Scatter plot of", var1, "vs", var2), x = var1, y = var2) +
+      theme_minimal();
+    print(plot);
+  }
+}
+```
+
+```{r fit_model}
+# Fit a random forest model for partial dependence analysis
+rf_model <- randomForest(as.formula(paste(response_var, "~ .")), data = train_data);
+```
+
+```{r partial_dependence}
+# Calculate partial dependence for the first predictor variable
+# Assuming the first column after response is a predictor
+predictor_vars <- setdiff(names(pima), response_var);
+first_predictor <- predictor_vars[1];
+
+pdp_result <- partial(rf_model, pred.var = first_predictor, train = train_data);
+
+# Plot partial dependence
+plotPartial(pdp_result, main = paste("Partial Dependence of", response_var, "on", first_predictor));
+```
+
+```{r additional_pdps}
+# Calculate and plot partial dependence for other key variables
+for (variable_name in predictor_vars[2:min(3, length(predictor_vars))]) {  # Plot for first 3 predictors
+  pdp_result <- partial(rf_model, pred.var = variable_name, train = train_data);
+  plotPartial(pdp_result, main = paste("Partial Dependence of", response_var, "on", variable_name));
+}
+```

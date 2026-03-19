@@ -1,0 +1,44 @@
+# Best Coding Practices Skill File
+
+## General Principles
+- Write clean, readable code
+- Use meaningful variable and function names
+- Add comments to explain complex logic
+- Follow consistent formatting and indentation
+- Keep functions small and focused on single responsibilities
+
+## Version Control
+- Commit frequently with clear messages
+- Use branches for new features
+- Review code before merging
+- Never commit sensitive information
+
+## Testing
+- Write unit tests for new code
+- Test edge cases and error conditions
+- Use automated testing where possible
+- Maintain test coverage above 80%
+
+## Security
+- Validate all inputs
+- Use secure coding practices
+- Keep dependencies updated
+- Avoid hardcoding secrets
+
+## Performance
+- Optimize bottlenecks, not everything
+- Use appropriate data structures
+- Profile code to identify issues
+- Consider memory usage
+
+## Documentation
+- Document public APIs
+- Keep README files up to date
+- Use inline comments sparingly but effectively
+- Maintain change logs
+
+## Collaboration
+- Follow team coding standards
+- Use code reviews
+- Communicate changes clearly
+- Respect others' code and opinions
